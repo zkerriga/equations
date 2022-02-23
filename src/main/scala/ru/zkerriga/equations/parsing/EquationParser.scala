@@ -1,22 +1,20 @@
 package ru.zkerriga.equations.parsing
 
 import cats.Monad
-import cats.implicits._
+import cats.implicits.*
 import ru.zkerriga.equations.domain.ZeroEquation
 import ru.zkerriga.equations.parsing.core.Parsers
-import ru.zkerriga.equations.parsing.models.{ParsingFailure, Summand}
+import ru.zkerriga.equations.parsing.models.{ParsingFailure, ParsingResult, Summand}
 
-trait EquationParser[F[_]] {
-  def parse(equation: String): F[ZeroEquation]
-}
+trait EquationParser[F[_]]:
+  def parse(equation: String): F[ParsingResult[ZeroEquation]]
 
-object EquationParser {
+object EquationParser:
   private final class Impl[F[_]](using Monad[F]) extends EquationParser[F]:
-    override def parse(equation: String): F[ZeroEquation] =
+    override def parse(equation: String): F[ParsingResult[ZeroEquation]] =
       for {
         spaced <- Parsers.updateSpaces(equation).pure[F]
         _      <- println(spaced).pure
-      } yield ZeroEquation(List.empty)
+      } yield ParsingResult.success(ZeroEquation(List.empty))
 
-  def make[F[_]: Monad]: EquationParser[F] = new Impl[F]
-}
+  def make[F[_]: Monad]: EquationParser[F] = Impl[F]

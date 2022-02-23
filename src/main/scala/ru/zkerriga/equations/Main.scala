@@ -1,15 +1,24 @@
 package ru.zkerriga.equations
 
-import cats.Id
+import cats.Monad
+import cats.effect.std.Console
+import cats.effect.{ExitCode, IO, IOApp}
+import cats.syntax.all._
 import ru.zkerriga.equations.parsing.EquationParser
 
-object Main {
-  def main(args: Array[String]): Unit = {
-    val parser: EquationParser[Id] = EquationParser.make[Id]
+object Main extends IOApp {
+  val parser: EquationParser[IO] = EquationParser.make[IO]
+  val processor: Processing[IO] = Processing.make[IO](parser)
 
-    print("Write equation: ")
-    val equation = scala.io.StdIn.readLine()
+  def equationsLoop[F[_]: Monad: Console](processor: Processing[F]): F[Unit] =
+    for {
+      _ <- Console[F].print("Write equation: ")
+      rawEquation <- Console[F].readLine
+      result <- processor.process(rawEquation)
+      _ <- Console[F].println(result)
+      _ <- equationsLoop(processor)
+    } yield ()
 
-    println(parser.parse(equation))
-  }
+  override def run(args: List[String]): IO[ExitCode] =
+    equationsLoop(processor) as ExitCode.Success
 }

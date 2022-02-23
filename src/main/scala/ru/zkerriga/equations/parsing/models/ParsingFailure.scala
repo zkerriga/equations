@@ -2,6 +2,6 @@ package ru.zkerriga.equations.parsing.models
 
 case class ParsingFailure(
   raw: String,
-  rightErrorIndex: Int,
+  errorPlaceIndex: Int,
   description: String,
 )
