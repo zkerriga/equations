@@ -14,7 +14,7 @@ class SummandBuilderSpec extends AnyFlatSpec with Matchers {
       multiplierSign = Sign.Minus.some,
       multiplier = Coefficient(BigDecimal(4)).some,
       variable = Variable("Y").some,
-      exponent = RawExponent(Sign.Plus.some, Coefficient(BigDecimal(2))).some,
+      exponent = Coefficient(BigDecimal(2)).some,
     ).build shouldBe Summand(
       multiplier = Coefficient(BigDecimal(-4)),
       variable = Variable("Y"),

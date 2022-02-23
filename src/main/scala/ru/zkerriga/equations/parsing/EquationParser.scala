@@ -6,7 +6,7 @@ import cats.implicits._
 import cats.syntax.either._
 import cats.syntax.monad._
 import ru.zkerriga.equations.domain.ZeroEquation
-import ru.zkerriga.equations.parsing.core.{EquationSides, PreParsers, ParsingResult}
+import ru.zkerriga.equations.parsing.core.{EquationSides, PreParsers, Parser, ParsingResult}
 import ru.zkerriga.equations.parsing.models.{ErrorMessage, Summand}
 import ru.zkerriga.equations.utils.Raise
 import ru.zkerriga.equations.utils.Raise.syntax.*
@@ -25,6 +25,11 @@ object EquationParser:
         sidesResult map { case EquationSides(left, right) =>
           val leftBlocks  = PreParsers.separateSummands(left)
           val rightBlocks = PreParsers.separateSummands(right)
+
+          val leftResults  = leftBlocks map Parser.parseSummand
+          val rightResults = rightBlocks map Parser.parseSummand
+
+          println(leftResults -> rightResults)
 
           ZeroEquation(List.empty)
         }
