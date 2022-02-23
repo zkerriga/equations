@@ -13,4 +13,6 @@ object errors {
   val UnexpectedExponent   = "Unexpected exponent of the summand"
 
   val ExponentMustHaveNumber = "The exponent must have a number"
+
+  val VariableExpectedAfterMultiplication = "A variable is expected after multiplication"
 }

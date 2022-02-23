@@ -42,8 +42,12 @@ private[parsing] object PreParsers {
     val (acc, lastBlock) = spaced.foldLeft((List.empty[String], List.empty[Char])) {
       case ((blocks, blockAcc), ch) =>
         ch match {
-          case '-' | '+' => (addIfNotEmpty(blockAcc, blocks), List(ch))
-          case _         => (blocks, ch +: blockAcc)
+          case '-' | '+' =>
+            blockAcc.headOption match {
+              case Some('^') => (blocks, ch +: blockAcc)
+              case _         => (addIfNotEmpty(blockAcc, blocks), List(ch))
+            }
+          case _ => (blocks, ch +: blockAcc)
         }
     }
     addIfNotEmpty(lastBlock, acc).reverse

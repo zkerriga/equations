@@ -25,7 +25,7 @@ object Parser {
   def parseExponent(raw: List[Char]): Either[String, (Coefficient, List[Char])] = raw match {
     case Nil => ExponentMustHaveNumber.asLeft
     case ch :: tail =>
-      if (ch === '-') parseNumber(tail, NonEmptyList.of('-', '0')).asRight
+      if (ch === '-') parseNumber(tail, NonEmptyList.of('0', '-')).asRight
       else if (ch === '+') parseNumber(tail, NonEmptyList.one('0')).asRight
       else if (ch.isDigit) parseNumber(tail, NonEmptyList.one(ch)).asRight
       else ExponentMustHaveNumber.asLeft
@@ -38,6 +38,14 @@ object Parser {
       else Variable(acc.reverse.toList.mkString) -> raw
   }
 
+  def parseStarVariable(raw: List[Char]): Either[String, (Variable, List[Char])] =
+    raw.dropWhile(_ === ' ') match {
+      case Nil => VariableExpectedAfterMultiplication.asLeft
+      case ch :: tail =>
+        if (ch.isLetter) parseVariable(tail, NonEmptyList.one(ch)).asRight
+        else VariableExpectedAfterMultiplication.asLeft
+    }
+
   def parseSummand(
     rawSummand: String
   ): Either[ParsingResult.Failure, (ParsingResult.Success, Summand)] = {
@@ -47,6 +55,7 @@ object Parser {
     def success(builder: SummandBuilder): Either[Nothing, (ParsingResult.Success, Summand)] =
       (ParsingResult.Success(rawSummand), builder.build).asRight
 
+    @scala.annotation.tailrec
     def parse(
       rawLeft: List[Char],
       builder: SummandBuilder,
@@ -97,6 +106,19 @@ object Parser {
                   )
               }
             else fail(index, UnexpectedExponent)
+
+          case '*' =>
+            if (builder.state === State.Multiplier) {
+              parseStarVariable(tail) match {
+                case Left(error) => fail(index, error)
+                case Right((variable, nextTail)) =>
+                  parse(
+                    nextTail,
+                    builder.addVariable(variable),
+                    index + rawLeft.length - nextTail.length,
+                  )
+              }
+            } else fail(index, UnexpectedVariable)
 
           case _ => fail(index, UnexpectedExpression)
         }
