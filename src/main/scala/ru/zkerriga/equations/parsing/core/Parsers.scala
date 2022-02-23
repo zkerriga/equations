@@ -1,6 +1,10 @@
 package ru.zkerriga.equations.parsing.core
 
-import ru.zkerriga.equations.parsing.models.ParsingFailure
+import cats.syntax.eq.*
+import cats.syntax.either.*
+import cats.syntax.option.*
+import ru.zkerriga.equations.parsing.errors.*
+import ru.zkerriga.equations.parsing.core.ParsingResult
 
 private[parsing] object Parsers {
   def updateSpaces(raw: String): String = {
@@ -21,6 +25,13 @@ private[parsing] object Parsers {
       .replaceAll("\\s*[\\^]\\s*[-]\\s*", "^-")
   }
 
-  def extractEqualSign(raw: String): Either[ParsingFailure, EquationSides[String]] = ???
+  def extractEqualSign(raw: String): Either[ParsingResult.Failure, EquationSides[String]] =
+    raw.split("=", 3) match {
+      case Array(_)           => ParsingResult.Failure(raw, 0, EqualSignNotFound).asLeft
+      case Array(left, right) => EquationSides(left, right).asRight
+      case Array(first, second, _*) =>
+        ParsingResult
+          .Failure(raw, first.length + second.length + 1, NotOnlyOneEqualSign).asLeft
+    }
 
 }
