@@ -58,5 +58,20 @@ class ErrorPrinterSpec extends AnyFlatSpec with Matchers {
         |   ^
         |   Error
         |""".stripMargin
+
+    showErrors(
+      NonEmptyList.of(
+        ParsingResult.Failure("+ ", 1, "Error1"),
+        ParsingResult.Success("+ 1 "),
+        ParsingResult.Failure("- X X ", 4, "Error2"),
+        ParsingResult.Success("+ 1X^2"),
+      )
+    ) shouldBe
+      """
+        |+ + 1 - X X + 1X^2
+        | ^        ^
+        |          Error2
+        | Error1
+        |""".stripMargin
   }
 }
