@@ -5,8 +5,8 @@ import org.scalatest.matchers.should.Matchers
 import ru.zkerriga.equations.parsing.errors.{EqualSignNotFound, NotOnlyOneEqualSign}
 import ru.zkerriga.equations.parsing.core.ParsingResult
 
-class ParsersSpec extends AnyFlatSpec with Matchers {
-  import Parsers._
+class PreParsersSpec extends AnyFlatSpec with Matchers {
+  import PreParsers._
 
   "updateSpaces" should "convert many spaces to one" in {
     updateSpaces("X        Y Z 1 = 2 -  \t4\t  +        0") shouldBe "X Y Z 1 = 2 - 4 + 0"

@@ -6,7 +6,7 @@ import cats.syntax.option.*
 import ru.zkerriga.equations.parsing.errors.*
 import ru.zkerriga.equations.parsing.core.ParsingResult
 
-private[parsing] object Parsers {
+private[parsing] object PreParsers {
   def updateSpaces(raw: String): String = {
 
     extension (raw: String)
