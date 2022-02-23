@@ -23,6 +23,9 @@ object EquationParser:
 
       Applicative[F].pure {
         sidesResult map { case EquationSides(left, right) =>
+          val leftBlocks  = Parsers.separateSummands(left)
+          val rightBlocks = Parsers.separateSummands(right)
+
           ZeroEquation(List.empty)
         }
       }

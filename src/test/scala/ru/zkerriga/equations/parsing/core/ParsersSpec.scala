@@ -40,4 +40,16 @@ class ParsersSpec extends AnyFlatSpec with Matchers {
     extractEqualSign("X^0 = Y^0") shouldBe Right(EquationSides("X^0 ", " Y^0"))
   }
 
+  "separateSummands" should "separate valid strings" in {
+    separateSummands("1 + 2 + 3 - 4") shouldBe List("1 ", "+ 2 ", "+ 3 ", "- 4")
+    separateSummands("+ 1 + 2 ") shouldBe List("+ 1 ", "+ 2 ")
+    separateSummands(" + 1X - 2 * X^2") shouldBe List("+ 1X ", "- 2 * X^2")
+  }
+
+  it should "separete invalid strings" in {
+    separateSummands("X X") shouldBe List("X X")
+    separateSummands("X + + X") shouldBe List("X ", "+ ", "+ X")
+    separateSummands("- 1 + 0 +") shouldBe List("- 1 ", "+ 0 ", "+")
+  }
+
 }
