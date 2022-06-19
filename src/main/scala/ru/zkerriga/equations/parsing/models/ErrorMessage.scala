@@ -6,7 +6,7 @@ import ru.zkerriga.equations.parsing.core.{ErrorPrinter, ParsingResult}
 
 opaque type ErrorMessage = String
 object ErrorMessage:
-  inline def generate(results: NonEmptyList[ParsingResult]): ErrorMessage =
+  def generate(results: NonEmptyList[ParsingResult]): ErrorMessage =
     ErrorPrinter.showErrors(results)
 
   def from(failure: ParsingResult.Failure): ErrorMessage =

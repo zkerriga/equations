@@ -7,13 +7,13 @@ import cats.syntax.all._
 import ru.zkerriga.equations.parsing.EquationParser
 
 object Main extends IOApp:
-  def equationsLoop[F[_]: Monad: Console](processor: Processing[F]): F[Unit] =
+  def equationsLoop[F[_]: Monad](processing: Processing[F])(using console: Console[F]): F[Unit] =
     for
-      _           <- Console[F].print("Write equation: ")
-      rawEquation <- Console[F].readLine
-      result      <- processor.process(rawEquation)
-      _           <- Console[F].println(result)
-      _           <- equationsLoop(processor)
+      _           <- console.print("Write equation: ")
+      rawEquation <- console.readLine
+      result      <- processing(rawEquation)
+      _           <- console.println(result)
+      _           <- equationsLoop(processing)
     yield ()
 
   override def run(args: List[String]): IO[ExitCode] =

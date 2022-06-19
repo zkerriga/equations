@@ -9,11 +9,11 @@ import cats.syntax.applicative.*
 import cats.syntax.flatMap.*
 
 trait Processing[F[_]]:
-  def process(rawEquation: String): F[String]
+  def apply(rawEquation: String): F[String]
 
 object Processing:
   private final class Impl[F[_]: Monad](parser: EquationParser[F]) extends Processing[F]:
-    override def process(rawEquation: String): F[String] =
+    override def apply(rawEquation: String): F[String] =
       parser.parse(rawEquation) flatMap {
         case Left(error)     => Show[ErrorMessage].show(error).pure[F]
         case Right(equation) => equation.toString.pure[F] // todo

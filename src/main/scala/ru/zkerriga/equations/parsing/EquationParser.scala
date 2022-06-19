@@ -3,50 +3,67 @@ package ru.zkerriga.equations.parsing
 import cats.{Applicative, Monad}
 import cats.data.EitherT
 import cats.data.NonEmptyList
-import cats.syntax.either._
-import cats.syntax.monad._
+import cats.effect.Concurrent
+import cats.Parallel
+import cats.syntax.either.*
+import cats.syntax.functor.*
+import cats.syntax.parallel.*
 import ru.zkerriga.equations.domain.*
-import ru.zkerriga.equations.parsing.core.{EquationSides, PreParsers, Parser, ParsingResult}
+import ru.zkerriga.equations.parsing.core.{EquationSides, Parser, ParsingResult, PreParsers}
 import ru.zkerriga.equations.parsing.models.*
-import ru.zkerriga.equations.utils.Raise
+import ru.zkerriga.equations.utils.{Delay, Raise}
 import ru.zkerriga.equations.utils.Raise.syntax.*
+import cats.effect.syntax.concurrent.*
+import ru.zkerriga.equations.parsing.errors.SideDoesNotExist
 
 trait EquationParser[F[_]]:
   def parse(rawEquation: String): F[Either[ErrorMessage, ZeroEquation]]
 
 object EquationParser:
-  private final class Impl[F[_]: Monad] extends EquationParser[F]:
+  private final class Impl[F[_]: Monad: Delay: Concurrent: Parallel] extends EquationParser[F]:
     override def parse(rawEquation: String): F[Either[ErrorMessage, ZeroEquation]] =
-      val spaced      = PreParsers.updateSpaces(rawEquation)
-      val sidesResult = PreParsers.extractEqualSign(spaced) leftMap ErrorMessage.from
+      val spaced = PreParsers.updateSpaces(rawEquation)
+      val wrapped = for {
+        sides <- EitherT.fromEither[F](
+          PreParsers.extractEqualSign(spaced) leftMap ErrorMessage.from
+        )
+        parPair <- EitherT.right(
+          (parseSummandsFrom(sides.left), parseSummandsFrom(sides.right)).parMapN((_, _))
+        ) flatMap ensureEquationIsCorrect
 
-      summon[Applicative[F]].pure {
-        sidesResult flatMap { case EquationSides(left, right) =>
-          val leftBlocks  = PreParsers.separateSummands(left)
-          val rightBlocks = PreParsers.separateSummands(right)
+        (leftSummands, rightSummands) = parPair
+        summands = leftSummands ::: rightSummands.map(s => s.copy(multiplier = s.multiplier.toNegative))
+      } yield ZeroEquation(summands)
+      wrapped.value
 
-          val leftResults  = leftBlocks map Parser.parseSummand
-          val rightResults = rightBlocks map Parser.parseSummand
+    private def isErrorExists(result: (List[ParsingResult], List[Summand])): Boolean = result match
+      case (parsingResults, summands) => parsingResults.length != summands.length
 
-          val (leftParsingResults, leftSummands)   = collectErrors(leftResults)
-          val (rigntParsingResults, rightSummands) = collectErrors(rightResults)
+    private def addEmptySideError(results: List[ParsingResult]): List[ParsingResult] =
+      if results.isEmpty then List(ParsingResult.Failure(" ", 0, SideDoesNotExist))
+      else results
 
-          if (
-            leftSummands.length == leftResults.length &&
-            rightSummands.length == rightResults.length
-          )
-            ZeroEquation(
-              leftSummands ++: rightSummands.map(s => s.copy(multiplier = s.multiplier.toNegative))
-            ).asRight
-          else
-            ErrorMessage
-              .generate(
-                NonEmptyList.fromListUnsafe(
-                  leftParsingResults ::: ParsingResult.Success(" = ") :: rigntParsingResults
-                )
-              ).asLeft
+    private val ensureEquationIsCorrect: Tuple2[
+      (List[ParsingResult], List[Summand]),
+      (List[ParsingResult], List[Summand]),
+    ] => EitherT[F, ErrorMessage, (List[Summand], List[Summand])] = _ match
+      case ((leftParsings, leftSummands), (rightParsings, rightSummands)) =>
+        val fullLeftParsings = addEmptySideError(leftParsings)
+        val fullRightParsings = addEmptySideError(rightParsings)
+
+        val leftError = isErrorExists(fullLeftParsings -> leftSummands)
+        val rightError = isErrorExists(fullRightParsings -> rightSummands)
+
+        if leftError || rightError then EitherT.leftT {
+          ErrorMessage.generate(NonEmptyList.fromListUnsafe(fullLeftParsings ::: ParsingResult.Success(" = ") :: fullRightParsings))
         }
-      }
+        else EitherT.rightT(leftSummands -> rightSummands)
+
+    private def parseSummandsFrom(spaced: String): F[(List[ParsingResult], List[Summand])] =
+      val blocks: List[String] = PreParsers.separateSummands(spaced)
+      blocks.parTraverseN(10) { block =>
+        summon[Delay[F]].delay(Parser.parseSummand(block))
+      } map collectErrors
 
     private def collectErrors[A](
       results: List[Either[ParsingResult.Failure, (ParsingResult.Success, A)]]
@@ -59,4 +76,6 @@ object EquationParser:
       }
       (pr.reverse, a.reverse)
 
-  def make[F[_]: Monad]: EquationParser[F] = Impl[F]
+  end Impl
+
+  def make[F[_]: Monad: Delay: Concurrent: Parallel]: EquationParser[F] = Impl[F]

@@ -15,4 +15,6 @@ object errors {
   inline val ExponentMustHaveNumber = "The exponent must have a number"
 
   inline val VariableExpectedAfterMultiplication = "A variable is expected after multiplication"
+
+  inline val SideDoesNotExist = "The side must contain the expression"
 }
