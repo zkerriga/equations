@@ -5,7 +5,7 @@ import org.scalatest.matchers.should.Matchers
 import ru.zkerriga.equations.parsing.errors.{EqualSignNotFound, NotOnlyOneEqualSign}
 import ru.zkerriga.equations.parsing.core.ParsingResult
 
-class PreParsersSpec extends AnyFlatSpec with Matchers {
+class PreParsersSpec extends AnyFlatSpec with Matchers:
   import PreParsers._
 
   "updateSpaces" should "convert many spaces to one" in {
@@ -51,5 +51,3 @@ class PreParsersSpec extends AnyFlatSpec with Matchers {
     separateSummands("X + + X") shouldBe List("X ", "+ ", "+ X")
     separateSummands("- 1 + 0 +") shouldBe List("- 1 ", "+ 0 ", "+")
   }
-
-}

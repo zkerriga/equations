@@ -1,10 +1,10 @@
 package ru.zkerriga.equations.parsing.core
 
-import cats.syntax.eq.*
 import cats.data.NonEmptyList
 import ru.zkerriga.equations.parsing.core.ParsingResult
 
-private[parsing] object ErrorPrinter {
+private[parsing] object ErrorPrinter:
+
   case class OffsetMessage(message: String, offset: Int) {
     def show: String = (" " * offset) + message
   }
@@ -14,7 +14,7 @@ private[parsing] object ErrorPrinter {
     tagsLine: String,
     descriptions: List[OffsetMessage],
   )
-  object MessageBuilder {
+  object MessageBuilder:
     extension (b: MessageBuilder)
       def addEquationPart(part: String): MessageBuilder =
         b.copy(equationLine = b.equationLine ++ part)
@@ -31,13 +31,12 @@ private[parsing] object ErrorPrinter {
            |${b.tagsLine.stripTrailing()}
            |${b.descriptions.map(_.show).mkString("\n")}
            |""".stripMargin
-  }
+  end MessageBuilder
 
   def makeTagPart(e: ParsingResult.Failure): String =
-    if (e.errorTagIndex < e.raw.length)
+    if e.errorTagIndex < e.raw.length then
       (" " * e.errorTagIndex) + '^' ++ (" " * (e.raw.length - e.errorTagIndex - 1))
-    else
-      " " * e.raw.length
+    else " " * e.raw.length
 
   def showErrors(errors: NonEmptyList[ParsingResult]): String =
     errors
@@ -54,4 +53,3 @@ private[parsing] object ErrorPrinter {
               .addTagPart(makeTagPart(f))
               .addDescription(index + builder.equationLine.length, description)
       }.build
-}

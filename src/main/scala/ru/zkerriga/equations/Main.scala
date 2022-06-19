@@ -6,19 +6,17 @@ import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.all._
 import ru.zkerriga.equations.parsing.EquationParser
 
-object Main extends IOApp {
-  val parser: EquationParser[IO] = EquationParser.make[IO]
-  val processor: Processing[IO] = Processing.make[IO](parser)
-
+object Main extends IOApp:
   def equationsLoop[F[_]: Monad: Console](processor: Processing[F]): F[Unit] =
-    for {
-      _ <- Console[F].print("Write equation: ")
+    for
+      _           <- Console[F].print("Write equation: ")
       rawEquation <- Console[F].readLine
-      result <- processor.process(rawEquation)
-      _ <- Console[F].println(result)
-      _ <- equationsLoop(processor)
-    } yield ()
+      result      <- processor.process(rawEquation)
+      _           <- Console[F].println(result)
+      _           <- equationsLoop(processor)
+    yield ()
 
   override def run(args: List[String]): IO[ExitCode] =
+    val parser: EquationParser[IO] = EquationParser.make[IO]
+    val processor: Processing[IO]  = Processing.make[IO](parser)
     equationsLoop(processor) as ExitCode.Success
-}

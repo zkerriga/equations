@@ -11,7 +11,7 @@ import ru.zkerriga.equations.parsing.core.ErrorPrinter.{
 }
 import ru.zkerriga.equations.parsing.core.ParsingResult
 
-class ErrorPrinterSpec extends AnyFlatSpec with Matchers {
+class ErrorPrinterSpec extends AnyFlatSpec with Matchers:
 
   "MessageBuilder" should "build correct message" in {
     MessageBuilder(
@@ -74,4 +74,3 @@ class ErrorPrinterSpec extends AnyFlatSpec with Matchers {
         | Error1
         |""".stripMargin
   }
-}

@@ -10,10 +10,10 @@ object Raise:
     def raise[A](err: E): F[A]
 
     def reRaise[A, E1 <: E](fa: F[Either[E1, A]])(using FlatMap[F], Applicative[F]): F[A] =
-      FlatMap[F].flatMap(fa)(_.fold(raise[A], Applicative[F].pure))
+      summon[FlatMap[F]].flatMap(fa)(_.fold(raise[A], summon[Applicative[F]].pure))
   }
 
-  def apply[F[_], E](using ev: Raise[F, E]): Raise[F, E] = ev
+  inline def apply[F[_], E](using ev: Raise[F, E]): Raise[F, E] = ev
 
   object syntax:
     extension [E](err: E) def raise[F[_], A](using raise: Raise[F, E]): F[A] = raise.raise(err)

@@ -6,7 +6,7 @@ import org.scalatest.matchers.should.Matchers
 import ru.zkerriga.equations.parsing.models.Summand
 import ru.zkerriga.equations.domain._
 
-class SummandBuilderSpec extends AnyFlatSpec with Matchers {
+class SummandBuilderSpec extends AnyFlatSpec with Matchers:
   import SummandBuilder._
 
   "SummandBuilder" should "builds from full Summand" in {
@@ -47,4 +47,3 @@ class SummandBuilderSpec extends AnyFlatSpec with Matchers {
       exponent = Coefficient(BigDecimal(0)),
     )
   }
-}
