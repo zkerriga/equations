@@ -59,12 +59,8 @@ object Parser:
     inline def success[Left](
       builder: SummandBuilder
     ): Either[Left, (ParsingResult.Success, Summand)] =
-      Right[Left, (ParsingResult.Success, Summand)](
-        (
-          ParsingResult.Success(rawSummand),
-          builder.build,
-        )
-      )
+      Tuple2[ParsingResult.Success, Summand](ParsingResult.Success(rawSummand), builder.build)
+        .asRight[Left]
 
     @tailrec
     def parse(
