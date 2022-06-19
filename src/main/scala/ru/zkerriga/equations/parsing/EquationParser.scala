@@ -28,7 +28,7 @@ object EquationParser:
           PreParsers.extractEqualSign(spaced) leftMap ErrorMessage.from
         )
         parPair <- EitherT.right(
-          (parseSummandsFrom(sides.left), parseSummandsFrom(sides.right)).parMapN((_, _))
+          (parseSummandsFrom(sides.left), parseSummandsFrom(sides.right)).parTupled
         ) flatMap ensureEquationIsCorrect
 
         (leftSummands, rightSummands) = parPair
@@ -43,10 +43,10 @@ object EquationParser:
       if results.isEmpty then List(ParsingResult.Failure(" ", 0, SideDoesNotExist))
       else results
 
-    private val ensureEquationIsCorrect: Tuple2[
+    private val ensureEquationIsCorrect: ((
       (List[ParsingResult], List[Summand]),
-      (List[ParsingResult], List[Summand]),
-    ] => EitherT[F, ErrorMessage, (List[Summand], List[Summand])] = _ match
+        (List[ParsingResult], List[Summand]),
+      )) => EitherT[F, ErrorMessage, (List[Summand], List[Summand])] = _ match
       case ((leftParsings, leftSummands), (rightParsings, rightSummands)) =>
         val fullLeftParsings = addEmptySideError(leftParsings)
         val fullRightParsings = addEmptySideError(rightParsings)
