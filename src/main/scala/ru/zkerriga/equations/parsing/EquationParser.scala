@@ -41,14 +41,16 @@ object EquationParser:
     private type Parsed[A]  = (List[ParsingResult], List[A])
     private type SidesOf[A] = (A, A)
 
-    private def isCorrect(result: Parsed[Summand]): Boolean = result match
-      case (parsingResults, summands) => parsingResults.length == summands.length
+    private def isCorrect(result: (NonEmptyList[ParsingResult], List[Summand])): Boolean =
+      result match
+        case (parsingResults, summands) => parsingResults.length == summands.length
 
-    private def addEmptySideError(results: List[ParsingResult]): List[ParsingResult] =
-      if results.isEmpty then List(ParsingResult.Failure(" ", 0, SideDoesNotExist))
-      else results
+    private def addEmptySideError(results: List[ParsingResult]): NonEmptyList[ParsingResult] =
+      results match
+        case head :: next => NonEmptyList(head, next)
+        case Nil          => NonEmptyList.one(ParsingResult.Failure(" ", 0, SideDoesNotExist))
 
-    private val ensureEquationIsCorrect: SidesOf[Parsed[Summand]] => EitherT[F, ErrorMessage, SidesOf[List[Summand]]] = {
+    private val ensureEquationIsCorrect: SidesOf[Parsed[Summand]] => EitherT[F, ErrorMessage, SidesOf[NonEmptyList[Summand]]] = {
       case ((leftParsings, leftSummands), (rightParsings, rightSummands)) =>
         val fullLeftParsings  = addEmptySideError(leftParsings)
         val fullRightParsings = addEmptySideError(rightParsings)
@@ -58,11 +60,10 @@ object EquationParser:
 
         EitherT.cond(
           test = leftCorrect && rightCorrect,
-          right = leftSummands -> rightSummands,
+          right =
+            NonEmptyList.fromListUnsafe(leftSummands) -> NonEmptyList.fromListUnsafe(rightSummands),
           left = ErrorMessage.generate(
-            NonEmptyList.fromListUnsafe(
-              fullLeftParsings ::: ParsingResult.Success(" = ") :: fullRightParsings
-            )
+            fullLeftParsings ::: ParsingResult.Success(" = ") :: fullRightParsings
           ),
         )
     }
