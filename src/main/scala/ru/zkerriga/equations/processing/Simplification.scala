@@ -8,7 +8,10 @@ import ru.zkerriga.equations.processing.models.{ExponentVariable, SimplifiedZero
 object Simplification:
   def simplify(equation: ZeroEquation): SimplifiedZeroEquation = SimplifiedZeroEquation {
     equation.summands.foldLeft(Map.empty[ExponentVariable, Coefficient]) { (acc, summand) =>
-      val exponentVariable = ExponentVariable(summand.variable, summand.exponent)
+      val exponentVariable = ExponentVariable(
+        if summand.exponent == Coefficient.Zero then Variable.Default else summand.variable,
+        summand.exponent,
+      )
 
       acc.updatedWith(exponentVariable) { maybeCoefficient =>
         val newCoefficient = maybeCoefficient.getOrElse(Coefficient.Zero) + summand.multiplier
