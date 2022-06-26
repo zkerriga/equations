@@ -1,5 +1,6 @@
 package ru.zkerriga.equations.printer
 
+import cats.Id
 import cats.data.NonEmptyList
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -8,8 +9,6 @@ import ru.zkerriga.equations.parsing.core.{EquationSides, ParsingResult, PrePars
 import ru.zkerriga.equations.parsing.models.{Summand, ZeroEquation}
 
 class EquationPrinterSpec extends AnyFlatSpec with Matchers:
-  import EquationPrinter.printEquation
-
   "printEquation" should "correctly print begin" in {
     printing(
       Summand(Coefficient(-12), Variable("x"), Coefficient(-9))
@@ -38,5 +37,7 @@ class EquationPrinterSpec extends AnyFlatSpec with Matchers:
     ) shouldBe "-2 * Z^1 + 30 * Y^0 - 100 * YEAH^-13001 = 0"
   }
 
+  private val service: EquationPrinter[Id] = EquationPrinter.make[Id]
+
   def printing(head: Summand, tail: Summand*): String =
-    printEquation(ZeroEquation(NonEmptyList.of(head, tail: _*)))
+    service.print(ZeroEquation(NonEmptyList.of(head, tail: _*)))

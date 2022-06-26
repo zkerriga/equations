@@ -3,8 +3,9 @@ package ru.zkerriga.equations
 import cats.Monad
 import cats.effect.std.Console
 import cats.effect.{ExitCode, IO, IOApp}
-import cats.syntax.all._
+import cats.syntax.all.*
 import ru.zkerriga.equations.parsing.EquationParser
+import ru.zkerriga.equations.printer.EquationPrinter
 
 object Main extends IOApp:
   def equationsLoop[F[_]: Monad](processing: Processing[F])(using console: Console[F]): F[Unit] =
@@ -17,6 +18,7 @@ object Main extends IOApp:
     yield ()
 
   override def run(args: List[String]): IO[ExitCode] =
-    val parser: EquationParser[IO] = EquationParser.make[IO]
-    val processor: Processing[IO]  = Processing.make[IO](parser)
+    val parser: EquationParser[IO]   = EquationParser.make[IO]
+    val printer: EquationPrinter[IO] = EquationPrinter.make[IO]
+    val processor: Processing[IO]    = Processing.make[IO](parser, printer)
     equationsLoop(processor) as ExitCode.Success
