@@ -1,8 +1,10 @@
 package ru.zkerriga.equations.processing
 
 import cats.data.EitherT
+import cats.data.StateT
 import cats.syntax.applicative.*
 import cats.syntax.flatMap.*
+import cats.syntax.functor.*
 import cats.{Applicative, Monad, Show}
 import ru.zkerriga.equations.parsing.EquationParser
 import ru.zkerriga.equations.parsing.models.{ErrorMessage, ZeroEquation}
@@ -17,8 +19,24 @@ object Processing:
     override def apply(rawEquation: String): F[String] =
       parser.parse(rawEquation) flatMap {
         case Left(error)     => Show[ErrorMessage].show(error).pure[F]
-        case Right(equation) => printer.print(equation) // todo
+        case Right(equation) => processingOn(equation)
       }
+
+    private def processingOn(equation: ZeroEquation): F[String] =
+      (for {
+        _ <- printer.print(equation).bufferize()
+        simplified = Simplification.simplify(equation)
+        _ <- printer.print(simplified.toEquation).bufferize(nextLine = true)
+      } yield ()).runEmptyS
+
+    extension [F[_]: Monad](fs: F[String])
+      def bufferize(nextLine: Boolean = false): StateT[F, String, Unit] = StateT { buffer =>
+        fs.map { output =>
+          (buffer + (if nextLine then "\n" else "") + output, ())
+        }
+      }
+
+  end Impl
 
   def make[F[_]: Monad](parser: EquationParser[F], printer: EquationPrinter[F]): Processing[F] =
     Impl[F](parser, printer)
