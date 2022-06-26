@@ -24,17 +24,19 @@ object Processing:
 
     private def processingOn(equation: ZeroEquation): F[String] =
       (for {
-        _ <- printer.print(equation).bufferize()
+        _ <- printer.print(equation).bufferize(prefix = "Raw equation: ")
         simplified = Simplification.simplify(equation)
-        _ <- printer.print(simplified.toEquation).bufferize(nextLine = true)
+        _ <- printer
+          .print(simplified.toEquation).bufferize(prefix = "Reduced form: ", nextLine = true)
       } yield ()).runEmptyS
 
     extension [F[_]: Monad](fs: F[String])
-      def bufferize(nextLine: Boolean = false): StateT[F, String, Unit] = StateT { buffer =>
-        fs.map { output =>
-          (buffer + (if nextLine then "\n" else "") + output, ())
+      def bufferize(prefix: String = "", nextLine: Boolean = false): StateT[F, String, Unit] =
+        StateT { buffer =>
+          fs.map { output =>
+            (buffer + (if nextLine then "\n" else "") + prefix + output, ())
+          }
         }
-      }
 
   end Impl
 
