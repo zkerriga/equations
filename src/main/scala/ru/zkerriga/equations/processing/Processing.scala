@@ -1,12 +1,11 @@
-package ru.zkerriga.equations
+package ru.zkerriga.equations.processing
 
-import cats.{Applicative, Monad}
-import cats.Show
 import cats.data.EitherT
-import ru.zkerriga.equations.parsing.EquationParser
-import ru.zkerriga.equations.parsing.models.{ErrorMessage, ZeroEquation}
 import cats.syntax.applicative.*
 import cats.syntax.flatMap.*
+import cats.{Applicative, Monad, Show}
+import ru.zkerriga.equations.parsing.EquationParser
+import ru.zkerriga.equations.parsing.models.{ErrorMessage, ZeroEquation}
 import ru.zkerriga.equations.printer.EquationPrinter
 
 trait Processing[F[_]]:

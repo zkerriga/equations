@@ -6,6 +6,7 @@ import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.all.*
 import ru.zkerriga.equations.parsing.EquationParser
 import ru.zkerriga.equations.printer.EquationPrinter
+import ru.zkerriga.equations.processing.Processing
 
 object Main extends IOApp:
   def equationsLoop[F[_]: Monad](processing: Processing[F])(using console: Console[F]): F[Unit] =
