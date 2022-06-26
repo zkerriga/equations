@@ -10,6 +10,7 @@ object Coefficient derives CanEqual:
     def absoluteString: String  = c.abs.toString()
 
     def +(other: Coefficient): Coefficient = c + other
+    def -(other: Coefficient): Coefficient = c - other
 
   given Ordering[Coefficient] = scala.Ordering.BigDecimal
 

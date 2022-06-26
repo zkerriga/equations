@@ -24,17 +24,23 @@ object Processing:
 
     private def processingOn(equation: ZeroEquation): F[String] =
       (for {
-        _ <- printer.print(equation).bufferize(prefix = "Raw equation: ")
-        simplified = Simplification.simplify(equation)
-        _ <- printer
-          .print(simplified.toEquation).bufferize(prefix = "Reduced form: ", nextLine = true)
+        _ <- printer.print(equation).bufferize("Raw equation: ", newLine = false)
+        simplified = Simplification.simplifyVariableNames(Simplification.simplify(equation))
+        _ <- printer.print(simplified.toEquation).bufferize("Reduced form: ")
+        (withoutNegative, wasCleaned) = Simplification.removeNegativeExponents(simplified)
+        _ <-
+          if wasCleaned then printer.print(withoutNegative.toEquation).bufferize("Increased: ")
+          else StateT.pure(())
+
+        degree = Degree.polynomialDegree(withoutNegative)
+        _ <- degree.toString.pure[F].bufferize("Polynomial degree: ")
       } yield ()).runEmptyS
 
     extension [F[_]: Monad](fs: F[String])
-      def bufferize(prefix: String = "", nextLine: Boolean = false): StateT[F, String, Unit] =
+      def bufferize(prefix: String = "", newLine: Boolean = true): StateT[F, String, Unit] =
         StateT { buffer =>
           fs.map { output =>
-            (buffer + (if nextLine then "\n" else "") + prefix + output, ())
+            (buffer + (if newLine then "\n" else "") + prefix + output, ())
           }
         }
 
