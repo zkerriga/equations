@@ -20,6 +20,6 @@ object Main extends IOApp:
 
   override def run(args: List[String]): IO[ExitCode] =
     val parser: EquationParser[IO]   = EquationParser.make[IO]
-    val printer: EquationPrinter[IO] = EquationPrinter.make[IO]
+    val printer: EquationPrinter[IO] = EquationPrinter.pretty[IO]
     val processor: Processing[IO]    = Processing.make[IO](parser, printer)
     equationsLoop(processor) as ExitCode.Success
